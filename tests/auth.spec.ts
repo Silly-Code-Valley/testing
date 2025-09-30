@@ -17,6 +17,18 @@ if (!TEST_USER_NAME || !TEST_USER_EMAIL || !TEST_USER_PASSWORD) {
   throw new Error('Missing required environment variables: TEST_USER_NAME, TEST_USER_EMAIL, TEST_USER_PASSWORD');
 }
 
+if (!TEST_ADMIN_EMAIL || !TEST_ADMIN_PASSWORD) {
+  throw new Error('Missing required environment variables: TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD');
+}
+
+if (!TEST_LAWYER_EMAIL || !TEST_LAWYER_PASSWORD) {
+  throw new Error('Missing required environment variables: TEST_LAWYER_EMAIL, TEST_LAWYER_PASSWORD');
+}
+
+if (!TEST_CLIENT_EMAIL || !TEST_CLIENT_PASSWORD) {
+  throw new Error('Missing required environment variables: TEST_CLIENT_EMAIL, TEST_CLIENT_PASSWORD');
+}
+
 // Setup test - ensure test user exists for duplicate tests
 test.beforeAll('setup: create test user if not exists', async ({ browser }) => {
   const context = await browser.newContext();
@@ -115,8 +127,55 @@ test.describe("User Login", () => {
         await page.getByRole('button', { name: 'Login' }).click();
 
         await expect(page.locator('.alert-danger')).toContainText(/invalid.*credentials|incorrect.*email.*password|login.*failed/i);
+        await expect(page).toHaveURL(/login/);
+    });
 
+    test('several login attempts should warn / lockout user', async ({ page }) => {
+        await page.goto('/login.php');
+
+        for (let i = 0; i < 10; i++) {
+            await page.fill('input[name="email"]', TEST_USER_EMAIL!);
+            await page.fill('input[name="password"]', 'wrongpassword123');
+            await page.getByRole('button', { name: 'Login' }).click();
+        }
+
+        await expect(page.locator('.alert-warning')).toContainText(/too many.*attempts|account.*locked|try again later/i);
         await expect(page).toHaveURL(/login/);
     });
 })
 
+test.describe("Role Based Access Control", () => {
+
+    test('admin users can access admin features', async ({ page }) => {
+        await page.goto('/login.php');
+
+        await page.fill('input[name="email"]', TEST_ADMIN_EMAIL);
+        await page.fill('input[name="password"]', TEST_ADMIN_PASSWORD);
+        await page.getByRole('button', { name: 'Login' }).click();
+
+        await expect(page).toHaveURL(/dashboard/);
+        await expect(page.locator('span.badge-role')).toHaveText(/Admin/i);
+    });
+
+    test('lawyers can access lawyer features', async ({ page }) => {
+        await page.goto('/login.php');
+
+        await page.fill('input[name="email"]', TEST_LAWYER_EMAIL);
+        await page.fill('input[name="password"]', TEST_LAWYER_PASSWORD);
+        await page.getByRole('button', { name: 'Login' }).click();
+
+        await expect(page).toHaveURL(/dashboard/);
+        await expect(page.locator('span.badge-role')).toHaveText(/Lawyer/i);
+    });
+
+    test('clients can access client features', async ({ page }) => {
+        await page.goto('/login.php');
+
+        await page.fill('input[name="email"]', TEST_CLIENT_EMAIL);
+        await page.fill('input[name="password"]', TEST_CLIENT_PASSWORD);
+        await page.getByRole('button', { name: 'Login' }).click();
+
+        await expect(page).toHaveURL(/dashboard/);
+        await expect(page.locator('span.badge-role')).toHaveText(/Client/i);
+    });
+});
