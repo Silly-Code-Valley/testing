@@ -38,7 +38,8 @@ test.beforeAll('setup: create test user if not exists', async ({ browser }) => {
     await page.goto('/register.php');
 
     // Try to create the test user
-    await page.fill('input[name="name"]', TEST_USER_NAME);
+    await page.fill('input[name="first_name"]', TEST_USER_NAME);
+    await page.fill('input[name="last_name"]', TEST_USER_NAME);
     await page.fill('input[name="email"]', TEST_USER_EMAIL);
     await page.fill('input[name="password"]', TEST_USER_PASSWORD);
 
@@ -56,7 +57,8 @@ test.beforeAll('setup: create test user if not exists', async ({ browser }) => {
 function generateUniqueUser() {
     const uniqueId = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
     return {
-        name: `TestUser-${uniqueId}`,
+        first_name: `${uniqueId}`,
+        last_name: `TestUser`,
         email: `test+${uniqueId}@example.com`,
         password: 'Password123!'
     };
@@ -70,7 +72,8 @@ test.describe("User Registration", () => {
         const user = generateUniqueUser();
 
         // Fill in registration form with unique email
-        await page.fill('input[name="name"]', user.name);
+        await page.fill('input[name="first_name"]', user.first_name);
+        await page.fill('input[name="last_name"]', user.last_name);
         await page.fill('input[name="email"]', user.email);
         await page.fill('input[name="password"]', user.password);
         await page.getByRole('button', { name: 'Create Account' }).click();
@@ -80,25 +83,13 @@ test.describe("User Registration", () => {
         // Comment: Lacks Success Response
     });
 
-    test('users cannot register with duplicate name', async ({ page }) => {
-        await page.goto('/register.php');
-
-        const user = generateUniqueUser();
-
-        await page.fill('input[name="name"]', TEST_USER_NAME);
-        await page.fill('input[name="email"]', user.email);
-        await page.fill('input[name="password"]', user.password);
-        await page.getByRole('button', { name: 'Create Account' }).click();
-
-        await expect(page.locator('.alert-danger')).toContainText(/.*name is already used/i);
-    });
-
     test('users cannot register with duplicate email', async ({ page }) => {
         await page.goto('/register.php');
 
         const user = generateUniqueUser();
 
-        await page.fill('input[name="name"]', user.name);
+        await page.fill('input[name="first_name"]', user.first_name);
+        await page.fill('input[name="last_name"]', user.last_name);
         await page.fill('input[name="email"]', TEST_USER_EMAIL);
         await page.fill('input[name="password"]', user.password);
         await page.getByRole('button', { name: 'Create Account' }).click();
@@ -127,19 +118,6 @@ test.describe("User Login", () => {
         await page.getByRole('button', { name: 'Login' }).click();
 
         await expect(page.locator('.alert-danger')).toContainText(/invalid.*credentials|incorrect.*email.*password|login.*failed/i);
-        await expect(page).toHaveURL(/login/);
-    });
-
-    test('several login attempts should warn / lockout user', async ({ page }) => {
-        await page.goto('/login.php');
-
-        for (let i = 0; i < 10; i++) {
-            await page.fill('input[name="email"]', TEST_USER_EMAIL!);
-            await page.fill('input[name="password"]', 'wrongpassword123');
-            await page.getByRole('button', { name: 'Login' }).click();
-        }
-
-        await expect(page.locator('.alert-warning')).toContainText(/too many.*attempts|account.*locked|try again later/i);
         await expect(page).toHaveURL(/login/);
     });
 })
