@@ -11,8 +11,8 @@ test('register page', async ({ page }) => {
   await page.goto('/login.php');
 
   // Click the get started link.
-  await page.getByRole('link', { name: 'Create an account' }).click();
+  await page.getByRole('link', { name: 'Create Account' }).click();
 
   // Expects page to have a button with the name of Create Account.
-  await expect(page.getByRole('button', { name: 'Register' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Create Account' })).toBeVisible();
 });
