@@ -81,6 +81,18 @@ export class BillingPage {
     };
   }
 
+  async getBillingRowDataAsClient(row: Locator) {
+    const cells = await row.locator('td').all();
+    return {
+      case: (await cells[0]?.textContent())?.trim() || '',
+      client: (await cells[1]?.textContent())?.trim() || '',
+      amount: (await cells[2]?.textContent())?.trim() || '',
+      status: (await cells[3]?.textContent())?.trim() || '',
+      dueDate: (await cells[4]?.textContent())?.trim() || '',
+      description: (await cells[5]?.textContent())?.trim() || '',
+    };
+  }
+
   async selectFirstAvailableCase(): Promise<{ value: string; name: string }> {
     const form = this.page.locator('form');
     const caseSelect = form.getByLabel(/Select Case/i);
