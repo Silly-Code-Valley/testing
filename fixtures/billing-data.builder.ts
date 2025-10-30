@@ -12,7 +12,6 @@ export class BillingDataBuilder {
   private withDefaults(): this {
     const uniqueId = this.generateUniqueId();
     this.data = {
-      caseName: `Case ${uniqueId}`,
       amount: this.generateRandomAmount(),
       description: `Legal consultation services ${uniqueId}`,
       dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],

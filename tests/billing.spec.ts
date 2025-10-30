@@ -114,8 +114,6 @@ test.describe('Lawyer Invoice Generation', () => {
     test.skip(!testCaseExists, 'Test case prerequisite failed — skipping test');
 
     // ARRANGE
-    const billingData = new BillingDataBuilder().build();
-
     await page.goto('/dashboard.php');
     await expect(page).toHaveURL(/dashboard/);
 
@@ -129,25 +127,22 @@ test.describe('Lawyer Invoice Generation', () => {
       await billingPage.selectCaseByTitle(testCaseData.title) || (await billingPage.selectFirstAvailableCase())
     ); // Ensure a case is selected (any for this test)
 
-    const completeBillingData = {
-      ...billingData,
-      caseName: selectedCase!.name,
-    };
+    const billingData = new BillingDataBuilder().withCaseName(selectedCase!.name).build();
 
     // ACT
-    const submittedData = await billingPage.fillBillingForm(completeBillingData);
+    const submittedData = await billingPage.fillBillingForm(billingData);
     await billingPage.submitBillingForm();
     await billingPage.navigateToBillingList();
 
     // ASSERT
-    const found = await findInPaginatedTable(page, completeBillingData.description);
+    const found = await findInPaginatedTable(page, billingData.description);
     expect(found).toBeTruthy(); // Billing entry is on the paginated table
 
-    const billingRow = await billingPage.findBillingRow(completeBillingData.description);
+    const billingRow = await billingPage.findBillingRow(billingData.description);
     const rowData = await billingPage.getBillingRowData(billingRow);
 
     // Assert Name
-    expect(rowData.case).toContain(completeBillingData.caseName);
+    expect(rowData.case).toContain(billingData.caseName);
 
     // Assert Client
     expect(rowData.client).toBeTruthy();
@@ -163,7 +158,7 @@ test.describe('Lawyer Invoice Generation', () => {
     expect(rowData.dueDate).toBe(submittedData.dueDate || '');
 
     // Assert Description
-    expect(rowData.description).toBe(completeBillingData.description);
+    expect(rowData.description).toBe(billingData.description);
     
   });
 
