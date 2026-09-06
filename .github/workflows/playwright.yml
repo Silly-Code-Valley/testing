@@ -10,6 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WEBSITE_URL: ${{ secrets.WEBSITE_URL }}
+      TEST_USER_NAME: ${{ secrets.TEST_USER_NAME }}
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
+      TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+      TEST_LAWYER_EMAIL: ${{ secrets.TEST_LAWYER_EMAIL }}
+      TEST_LAWYER_PASSWORD: ${{ secrets.TEST_LAWYER_PASSWORD }}
+      TEST_CLIENT_EMAIL: ${{ secrets.TEST_CLIENT_EMAIL }}
+      TEST_CLIENT_PASSWORD: ${{ secrets.TEST_CLIENT_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -19,6 +28,8 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Run auth setup
+      run: npx playwright test tests/auth.setup.ts --project=setup
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v4
